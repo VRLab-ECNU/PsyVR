@@ -1,0 +1,9 @@
+Binaries/
+Intermediate/
+Resources/
+
+# IDEA files
+.idea
+
+# OSX dir files
+.DS_Store

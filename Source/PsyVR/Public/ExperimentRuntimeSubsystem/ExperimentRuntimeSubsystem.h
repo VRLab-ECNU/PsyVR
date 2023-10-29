@@ -139,11 +139,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "ExperimentRuntimeSubsystem")
 	FString GetDataFilename(FString Extension=".csv");
 
+	UPROPERTY(BlueprintReadWrite, Category = "ExperimentRuntimeSubsystem")
 	FString ConditionsJsonObjectString;
 
 protected:
 	FString GetCurrentConditionJsonString();
 	
 	FString NextTrialConditionJsonString;
-	int32 pastTrialCount = 0;
+	int32 StartedTrialCount = 0;
 };

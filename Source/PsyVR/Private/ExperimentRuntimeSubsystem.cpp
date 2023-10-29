@@ -20,8 +20,15 @@ FString UExperimentRuntimeSubsystem::GetCurrentConditionJsonString()
 	
 	const TArray< TSharedPtr<FJsonValue> >* Trials;
 	JsonObj->GetObjectField(FString::FromInt(ExperimentStatus.CurrentSessionIndex))->TryGetArrayField(FString::FromInt(ExperimentStatus.CurrentBlockIndex), Trials);
-	FString NewTrialCondition = (*Trials)[ExperimentStatus.CurrentTrialIndex]->AsString();
-	return NewTrialCondition;
+
+	auto NewTrialConditionJsonObject = (*Trials)[ExperimentStatus.CurrentTrialIndex]->AsObject();
+
+	FString OutputString;
+	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	
+	FJsonSerializer::Serialize(NewTrialConditionJsonObject.ToSharedRef(), Writer);
+
+	return OutputString;
 }
 
 
@@ -90,6 +97,8 @@ void UExperimentRuntimeSubsystem::ToggleBeforeNewTrial()
 
 void UExperimentRuntimeSubsystem::ToggleStartTrial()
 {
+	UE_LOG(LogExpRT, Warning, TEXT("Starting trial: %d block: %d session: %d"), ExperimentStatus.CurrentTrialIndex, ExperimentStatus.CurrentBlockIndex, ExperimentStatus.CurrentSessionIndex);
+	StartedTrialCount ++;
 	if (StartTrial.IsBound())
 	{
 		StartTrial.Broadcast(ExperimentStatus, GetCurrentConditionJsonString());
@@ -119,7 +128,7 @@ void UExperimentRuntimeSubsystem::ToggleEndTrial()
 		UE_LOG(LogExpRT, Warning, TEXT("End Trial delegate is not bound."));
 	}
 
-	if(ExperimentStatus.CurrentSessionIndex == ExperimentStatus.TotalSessionCount && ExperimentStatus.CurrentBlockIndex == ExperimentStatus.TotalBlockCount && ExperimentStatus.CurrentTrialIndex == ExperimentStatus.TotalTrialCount)
+	if(ExperimentStatus.CurrentSessionIndex+1 == ExperimentStatus.TotalSessionCount && ExperimentStatus.CurrentBlockIndex+1 == ExperimentStatus.TotalBlockCount && ExperimentStatus.CurrentTrialIndex+1 == ExperimentStatus.TotalTrialCount)
 	{
 		ExperimentStatus.IsFinished = true;
 		if(EndExperiment.IsBound())
@@ -132,7 +141,7 @@ void UExperimentRuntimeSubsystem::ToggleEndTrial()
 		return;
 	}
 
-	if (ExperimentStatus.CurrentTrialIndex == ExperimentStatus.TotalTrialCount)
+	if (ExperimentStatus.CurrentTrialIndex+1 == ExperimentStatus.TotalTrialCount)
 	{
 		ExperimentStatus.CurrentTrialIndex = 0;
 		ExperimentStatus.CurrentBlockIndex ++;
